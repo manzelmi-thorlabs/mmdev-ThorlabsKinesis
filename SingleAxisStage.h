@@ -61,6 +61,9 @@ class SingleAxisStage final : public CStageBase<SingleAxisStage> {
     double motorPitch_{ 1.0 };
     double motorGearboxRatio_{ 1.0 };
     double motorStepsPerRev_{1.0};
+    double xmlMotorPitch_{ 1.0 };
+    double xmlMotorGearboxRatio_{ 1.0 };
+    double xmlMotorStepsPerRev_{ 1.0 };
     int pollingIntervalMs_{ 200 };
     bool didEnable_{ false };
 
@@ -104,6 +107,9 @@ public:
     int Home();
 
     int OnStageNameChange(MM::PropertyBase* pProp, MM::ActionType eAct);
+    int OnMotorPitchChanged(MM::PropertyBase* pProp, MM::ActionType eAct);
+    int OnMotorStepsPerRevChanged(MM::PropertyBase* pProp, MM::ActionType eAct);
+    int OnMotorGearboxRatioChanged(MM::PropertyBase* pProp, MM::ActionType eAct);
 
     bool IsContinuousFocusDrive() const override { return false; }
     int IsStageSequenceable(bool& f) const override { f = false; return DEVICE_OK; }

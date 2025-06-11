@@ -127,9 +127,14 @@ SingleAxisStage::SingleAxisStage(std::string const& name,
     AddAllowedValue(PROP_StageNameSelection, PROPVAL_StageNameCustom);
 
     //Properties for motor params
-    CreateFloatProperty(PROP_MotorPitch, 1, false, nullptr, true);
-    CreateFloatProperty(PROP_MotorStepsPerRev, 1, false, nullptr, true);
-    CreateFloatProperty(PROP_MotorGearboxRatio, 1, false, nullptr, true);
+    auto* pMotorPitchActEx = new CPropertyAction(this, &SingleAxisStage::OnMotorPitchChanged);
+    CreateFloatProperty(PROP_MotorPitch, 1, false, pMotorPitchActEx, true);
+
+    auto* pMotorStepsPerRevActEx = new CPropertyAction(this, &SingleAxisStage::OnMotorStepsPerRevChanged);
+    CreateFloatProperty(PROP_MotorStepsPerRev, 1, false, pMotorStepsPerRevActEx, true);
+
+    auto* pMotorGearboxRatioActEx = new CPropertyAction(this, &SingleAxisStage::OnMotorGearboxRatioChanged);
+    CreateFloatProperty(PROP_MotorGearboxRatio, 1, false, pMotorGearboxRatioActEx, true);
 
     if (supportsAutoDetection_)
     {
@@ -551,6 +556,63 @@ SingleAxisStage::MakeName(MotorDrive* motorDrive) const {
     return name;
 }
 
+int
+SingleAxisStage::OnMotorPitchChanged(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+    if (eAct == MM::BeforeGet)
+    {
+        pProp->Set(motorPitch_);
+    }
+    else if (eAct == MM::AfterSet)
+    {
+        pProp->Get(motorPitch_);
+        if (selectedStageName_.compare(PROPVAL_StageNameCustom) != 0 && motorPitch_ != xmlMotorPitch_)
+        {
+            selectedStageName_ = std::string(PROPVAL_StageNameCustom);
+            OnPropertyChanged(PROP_StageNameSelection, PROPVAL_StageNameCustom);
+        }
+    }
+    return DEVICE_OK;
+}
+
+int
+SingleAxisStage::OnMotorStepsPerRevChanged(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+    if (eAct == MM::BeforeGet)
+    {
+        pProp->Set(motorStepsPerRev_);
+    }
+    else if (eAct == MM::AfterSet)
+    {
+        pProp->Get(motorStepsPerRev_);
+        if (selectedStageName_.compare(PROPVAL_StageNameCustom) != 0 && motorStepsPerRev_ != xmlMotorStepsPerRev_)
+        {
+            selectedStageName_ = std::string(PROPVAL_StageNameCustom);
+            OnPropertyChanged(PROP_StageNameSelection, PROPVAL_StageNameCustom);
+        }
+    }
+    return DEVICE_OK;
+}
+
+int
+SingleAxisStage::OnMotorGearboxRatioChanged(MM::PropertyBase* pProp, MM::ActionType eAct)
+{
+    if (eAct == MM::BeforeGet)
+    {
+        pProp->Set(motorGearboxRatio_);
+    }
+    else if (eAct == MM::AfterSet)
+    {
+        pProp->Get(motorGearboxRatio_);
+        if (selectedStageName_.compare(PROPVAL_StageNameCustom) != 0 && motorGearboxRatio_ != xmlMotorGearboxRatio_)
+        {
+            selectedStageName_ = std::string(PROPVAL_StageNameCustom);
+            OnPropertyChanged(PROP_StageNameSelection, PROPVAL_StageNameCustom);
+        }
+    }
+    return DEVICE_OK;
+}
+
 int 
 SingleAxisStage::OnStageNameChange(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
@@ -576,13 +638,13 @@ SingleAxisStage::OnStageNameChange(MM::PropertyBase* pProp, MM::ActionType eAct)
                 switch (it->first)
                 {
                 case SettingsTypeMotorPitch:
-                    motorPitch_ = it->second;
+                    xmlMotorPitch_ = it->second;
                     break;
                 case SettingsTypeMotorGearboxRatio:
-                    motorGearboxRatio_ = it->second;
+                    xmlMotorGearboxRatio_ = it->second;
                     break;
                 case SettingsTypeMotorStepsPerRev:
-                    motorStepsPerRev_ = it->second;
+                    xmlMotorStepsPerRev_ = it->second;
                     break;
                 case SettingsTypeMotorUnits:
                     isRotational_ = it->second != 1.0;
@@ -592,9 +654,13 @@ SingleAxisStage::OnStageNameChange(MM::PropertyBase* pProp, MM::ActionType eAct)
                 }
             }
 
-            SetProperty(PROP_MotorGearboxRatio, std::to_string(motorGearboxRatio_).c_str());
-            SetProperty(PROP_MotorStepsPerRev, std::to_string(motorStepsPerRev_).c_str());
-            SetProperty(PROP_MotorPitch, std::to_string(motorPitch_).c_str());
+            motorGearboxRatio_ = xmlMotorGearboxRatio_;
+            motorStepsPerRev_ = xmlMotorStepsPerRev_;
+            motorPitch_ = xmlMotorPitch_;
+
+            OnPropertyChanged(PROP_MotorGearboxRatio, std::to_string(motorGearboxRatio_).c_str());
+            OnPropertyChanged(PROP_MotorStepsPerRev, std::to_string(motorStepsPerRev_).c_str());
+            OnPropertyChanged(PROP_MotorPitch, std::to_string(motorPitch_).c_str());
             SetProperty(PROP_StageType, isRotational_ ? PROPVAL_StageTypeRotational : PROPVAL_StageTypeLinear);
 
             deviceUnitsPerUm_ = (motorGearboxRatio_ * motorStepsPerRev_ / motorPitch_) / 1000;
