@@ -297,10 +297,19 @@ SingleAxisStage::Initialize() {
                 break;
             }
         }
-        deviceUnitsPerUm_ = (motorGearboxRatio_ * motorStepsPerRev_ / motorPitch_)/1000;
 
+        //Edge Case for FW103
+        if (motorPitch_ == 360.0)
+        {
+            motorPitch_ = 1.0;
+        }
+
+        //Formula (motorGearboxRatio_ * motorStepsPerRev_ / motorPitch_) is 1mm or 1degree of motion
+        deviceUnitsPerUm_ = (motorGearboxRatio_ * motorStepsPerRev_ / motorPitch_) / 1000;
         SetProperty(PROP_DeviceUnitsPerMillimeter, std::to_string(deviceUnitsPerUm_ * 1000).c_str());
-        SetProperty(PROP_DeviceUnitsPerRevolution, std::to_string(deviceUnitsPerUm_ * 360).c_str());
+
+        //Device units per Revolution of the stage = (motorGearboxRatio_ * motorStepsPerRev_ / motorPitch_) * 360 degrees
+        SetProperty(PROP_DeviceUnitsPerRevolution, std::to_string(deviceUnitsPerUm_ * 1000 * 360).c_str());
         SetProperty(PROP_StageType, isRotational_ ? PROPVAL_StageTypeRotational : PROPVAL_StageTypeLinear);
 
         if (hasHomeParams)
@@ -327,11 +336,15 @@ SingleAxisStage::Initialize() {
         motorGearboxRatio_ = gearboxRatio;
         motorStepsPerRev_ = stepsPerRev;
         motorPitch_ = motorPitch;
+        if (motorPitch == 360.0)
+        {
+            motorPitch = 1.0;
+        }
 
         deviceUnitsPerUm_ = (motorGearboxRatio_ * motorStepsPerRev_ / motorPitch_) / 1000;
 
-        SetProperty(PROP_DeviceUnitsPerMillimeter, std::to_string(deviceUnitsPerUm_*1000).c_str());
-        SetProperty(PROP_DeviceUnitsPerRevolution, std::to_string(deviceUnitsPerUm_*360).c_str());
+        SetProperty(PROP_DeviceUnitsPerMillimeter, std::to_string(deviceUnitsPerUm_ * 1000).c_str());
+        SetProperty(PROP_DeviceUnitsPerRevolution, std::to_string(deviceUnitsPerUm_ * 1000 *360).c_str());
     }
     else
     {
@@ -592,6 +605,12 @@ SingleAxisStage::OnStageNameChange(MM::PropertyBase* pProp, MM::ActionType eAct)
                 }
             }
 
+            //Edge Case for FW103
+            if (motorPitch_ == 360.0)
+            {
+                motorPitch_ = 1.0;
+            }
+
             SetProperty(PROP_MotorGearboxRatio, std::to_string(motorGearboxRatio_).c_str());
             SetProperty(PROP_MotorStepsPerRev, std::to_string(motorStepsPerRev_).c_str());
             SetProperty(PROP_MotorPitch, std::to_string(motorPitch_).c_str());
@@ -599,7 +618,7 @@ SingleAxisStage::OnStageNameChange(MM::PropertyBase* pProp, MM::ActionType eAct)
 
             deviceUnitsPerUm_ = (motorGearboxRatio_ * motorStepsPerRev_ / motorPitch_) / 1000;
             SetProperty(PROP_DeviceUnitsPerMillimeter, std::to_string(deviceUnitsPerUm_ * 1000).c_str());
-            SetProperty(PROP_DeviceUnitsPerRevolution, std::to_string(deviceUnitsPerUm_ * 360).c_str());
+            SetProperty(PROP_DeviceUnitsPerRevolution, std::to_string(deviceUnitsPerUm_ * 1000 * 360).c_str());
         }
     }
     return DEVICE_OK;
