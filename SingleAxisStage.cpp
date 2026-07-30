@@ -127,9 +127,9 @@ SingleAxisStage::SingleAxisStage(std::string const& name,
     AddAllowedValue(PROP_StageNameSelection, PROPVAL_StageNameCustom);
 
     //Properties for motor params
-    CreateFloatProperty(PROP_MotorPitch, 1, false, nullptr, true);
-    CreateFloatProperty(PROP_MotorStepsPerRev, 1, false, nullptr, true);
-    CreateFloatProperty(PROP_MotorGearboxRatio, 1, false, nullptr, true);
+    CreateFloatProperty(PROP_MotorPitch, 1.0, false, nullptr, true);
+    CreateFloatProperty(PROP_MotorStepsPerRev, 1.0, false, nullptr, true);
+    CreateFloatProperty(PROP_MotorGearboxRatio, 1.0, false, nullptr, true);
 
     if (supportsAutoDetection_)
     {
@@ -329,9 +329,9 @@ SingleAxisStage::Initialize() {
     }
     else if (strcmp(stageName, PROPVAL_StageNameCustom) == 0)
     {
-        long stepsPerRev = 0;
-        long gearboxRatio = 0;
-        long motorPitch = 0;
+        double stepsPerRev = 0;
+        double gearboxRatio = 0;
+        double motorPitch = 0;
 
         GetProperty(PROP_MotorStepsPerRev, stepsPerRev);
         GetProperty(PROP_MotorGearboxRatio, gearboxRatio);
